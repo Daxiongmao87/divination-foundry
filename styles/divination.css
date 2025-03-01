@@ -1,0 +1,235 @@
+/* Divination Module Styles */
+
+/* Golden theme variables */
+:root {
+  --divination-gold: #FFD700;
+  --divination-gold-light: #FFF2CC;
+  --divination-gold-dark: #927823;
+  --divination-disabled: #888888;
+}
+
+/* Increase width of control buttons area to fit our button */
+#chat-controls .control-buttons {
+  flex: 0 0 72px !important;
+}
+
+/* Custom icon for Divination in sidebar */
+.scene-control[data-control="divination"] i.fas.fa-crystal-ball,
+.control-tool[data-tool="divination"] i.fas.fa-crystal-ball {
+  color: var(--divination-gold);
+  text-shadow: 0 0 5px var(--divination-gold), 0 0 10px rgba(255, 215, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.scene-control[data-control="divination"]:hover i.fas.fa-crystal-ball,
+.control-tool[data-tool="divination"]:hover i.fas.fa-crystal-ball {
+  color: #fff;
+  text-shadow: 0 0 8px var(--divination-gold), 0 0 15px var(--divination-gold), 0 0 20px rgba(255, 215, 0, 0.7);
+  transform: scale(1.1);
+}
+
+/* Custom icon for Divination in sidebar */
+.scene-control[data-control="divination"] i.fas.fa-comments::before {
+  content: "\f005"; /* fa-star */
+}
+
+/* Divination chat control in chat controls */
+.divination-chat-control {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.divination-chat-control i {
+  color: white;
+  text-shadow: 0 0 5px var(--divination-gold), 0 0 10px rgba(255, 215, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.divination-chat-control:hover i {
+  color: #fff;
+  text-shadow: 0 0 8px var(--divination-gold), 0 0 15px var(--divination-gold), 0 0 20px rgba(255, 215, 0, 0.7);
+  transform: scale(1.1);
+}
+
+/* Disabled state for divination controls */
+.divination-chat-control.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.divination-chat-control.disabled i {
+  color: var(--divination-disabled);
+  text-shadow: none;
+}
+
+.divination-chat-control.disabled:hover i {
+  color: var(--divination-disabled);
+  text-shadow: none;
+  transform: none;
+}
+
+/* Remove button class styles */
+.divination-chat-button {
+  display: none;
+}
+
+/* Divination chat styling */
+.divination-chat .chat-message {
+  border-radius: 10px;
+  margin-bottom: 8px;
+  padding: 8px;
+}
+
+.divination-chat .chat-message.current-user {
+  background-color: rgba(65, 105, 225, 0.1);
+  margin-left: 20px;
+}
+
+.divination-chat .chat-message.other-user {
+  background-color: rgba(50, 50, 50, 0.1);
+  margin-right: 20px;
+}
+
+/* Make the messages look a bit more distinct */
+.foundry-im .chat-messages.message-list .chat-message .message-content {
+  font-size: 1.05em;
+  line-height: 1.4;
+}
+
+/* Style the model indicator */
+.foundry-im .chat-messages.message-list .chat-message .message-metadata .message-corner-text {
+  background-color: var(--divination-gold-dark);  /* Gold theme */
+  border-radius: 4px;
+  color: white;
+  padding: 2px 6px;
+}
+
+/* Style the avatar */
+.foundry-im .chat-messages.message-list .chat-message .message-header .avatar img {
+  border: none;
+  border-radius: 50%;
+}
+
+/* Journal entry button */
+.journal-sheet .window-header .divination-button {
+  margin-right: 5px;
+}
+
+/* Thinking animation */
+@keyframes thinking {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+.foundry-im .chat-messages.message-list .chat-message .message-content p i {
+  animation: thinking 1.5s infinite;
+}
+
+/* Reasoning section styles */
+.divination-reasoning {
+  background-color: rgba(30, 30, 30, 0.05);
+  border-left: 3px solid var(--divination-gold-dark);
+  border-radius: 4px;
+  margin-bottom: 10px;
+  padding: 8px;
+  font-size: 0.9em;
+}
+
+.divination-reasoning-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: var(--divination-gold-dark);
+}
+
+.divination-toggle-reasoning {
+  background-color: rgba(212, 175, 55, 0.2);
+  color: var(--divination-gold-dark);
+  border: 1px solid var(--divination-gold-dark);
+  border-radius: 3px;
+  padding: 2px 5px;
+  font-size: 0.8em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.divination-toggle-reasoning:hover {
+  background-color: rgba(212, 175, 55, 0.3);
+}
+
+.divination-reasoning-preview {
+  font-style: italic;
+  opacity: 0.8;
+  margin-bottom: 5px;
+}
+
+.divination-reasoning-full {
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  padding-top: 5px;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.divination-response {
+  margin-top: 10px;
+}
+
+/* Copy button for AI responses */
+.divination-copy-btn {
+  width: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--divination-gold-dark);
+  margin-left: 5px;
+  font-size: 0.8em;
+  padding: 2px 5px;
+  transition: all 0.2s ease;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Remove any legacy/conflicting copy button styles */
+.copy-message-btn,
+.message-copy-btn {
+  display: none !important;
+}
+
+.divination-copy-btn:hover {
+  background-color: rgba(212, 175, 55, 0.2);
+}
+
+.divination-copy-btn.copied {
+  color: #2e7d32;
+}
+
+.divination-copy-btn i {
+  font-size: 14px;
+}
+
+/* Tooltip for copy button */
+.divination-copy-tooltip {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  transform: translateY(-100%);
+  top: -5px;
+  right: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.divination-copy-tooltip.visible {
+  opacity: 1;
+} 

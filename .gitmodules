@@ -1,0 +1,9 @@
+[submodule "fimlib-foundry"]
+	path = fimlib-foundry
+	url = https://github.com/Daxiongmao87/fimlib-foundry.git
+[submodule "scripts/fimlib"]
+	path = scripts/fimlib
+	url = https://github.com/Daxiongmao87/fimlib-foundry.git
+[submodule ".void_context/legend-lore-foundry"]
+	path = .void_context/legend-lore-foundry
+	url = https://github.com/Daxiongmao87/legend-lore-foundry.git

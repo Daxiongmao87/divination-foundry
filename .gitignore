@@ -1,0 +1,28 @@
+# Divination module .gitignore
+
+# Ignore agent-related files
+.agent*
+.agent_context/
+
+# Ignore common development files
+node_modules/
+.DS_Store
+.env
+.idea/
+.vscode/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignore distribution files
+dist/
+build/
+
+# Ignore temporary files
+*.tmp
+*.temp
+.cache/
+
+# Ignore personal config files
+config.local.js
