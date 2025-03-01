@@ -53,8 +53,8 @@ jobs:
 
       - name: Generate Changelog
         run: |
-          if [ -z "${{ env.PREV_TAG }}" ]; then
-            # If PREV_TAG is empty, default to initial commit or another base
+          if [ -z "${{ env.PREV_TAG }}" ] || [ "${{ env.PREV_TAG }}" = "null" ]; then
+            # If PREV_TAG is empty or null, generate changelog from the beginning
             git log --pretty=format:'%h %s' --reverse > changelog.txt
           else
             git log ${{ env.PREV_TAG }}...${{ github.ref_name }} --pretty=format:'%h %s' --reverse > changelog.txt
@@ -115,7 +115,7 @@ jobs:
                 "notes": "https://github.com/daxiongmao87/divination-foundry/releases/tag/${{ env.TAG_NAME }}",
                 "compatibility": {
                   "minimum": "${{ steps.module_json.outputs.minimum }}",
-                  "verified": "${{ steps.module_json.outputs.verified }}",
+                  "verified": "${{ steps.module_json.outputs.verified }}"
                 }
               }
             }'
