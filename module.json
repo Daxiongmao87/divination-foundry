@@ -1,8 +1,8 @@
 {
   "id": "divination",
   "title": "Divination",
-  "description": "A ChatGPT-like interface for Foundry VTT that allows users to communicate with LLMs directly during gameplay.",
-  "version": "0.1.0",
+  "description": "A chat-like interface for Foundry VTT that allows users to communicate with LLMs directly during gameplay.",
+  "version": "1.0.0",
   "compatibility": {
     "minimum": "12",
     "verified": "12"
