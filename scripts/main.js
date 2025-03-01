@@ -220,60 +220,6 @@ function updateDivinationUI() {
     }, 100);
 }
 
-// Add a button to journal sheet header
-Hooks.on('getJournalSheetHeaderButtons', (app, buttons) => {
-    // Get the current journal entry
-    const journalEntry = app.object;
-    
-    const isConfigured = checkRequiredSettings();
-    
-    // Only add button if user has permission
-    if (hasPermission(game.user)) {
-        buttons.unshift({
-            label: "Ask about this entry",
-            icon: "fas fa-crystal-ball",
-            onclick: () => {
-                if (!isConfigured) {
-                    ui.notifications.warn("Please configure Divination settings first.");
-                    return;
-                }
-                
-                // Get journal entry content - v12 uses document instead of data
-                const content = journalEntry.pages?.contents?.[0]?.text?.content || 
-                               journalEntry.content || 
-                               journalEntry.data?.content || 
-                               "";
-                
-                const title = journalEntry.name || 
-                             journalEntry.data?.name || 
-                             "Untitled Entry";
-                
-                // Clean HTML tags to get plain text
-                const tempDiv = document.createElement("div");
-                tempDiv.innerHTML = content;
-                const plainText = tempDiv.textContent || tempDiv.innerText || "";
-                
-                // Open Divination chat with prefilled question about the journal
-                const chat = DivinationChat.openChat();
-                if (!chat) return; // User might not have permission
-                
-                const message = `Could you help me understand this journal entry titled "${title}"? Here's the content:\n\n${plainText.substring(0, 1500)}${plainText.length > 1500 ? '...' : ''}`;
-                
-                // Add message without sending
-                chat.chatWindow.addMessage({
-                    content: message,
-                    sender: game.user.name,
-                    img: game.user.avatar || "icons/svg/mystery-man.svg",
-                    cornerText: chat._getTimestamp()
-                });
-                
-                // Send the message
-                chat._handleUserMessage(message);
-            }
-        });
-    }
-});
-
 /**
  * Checks if the required settings are configured for Divination to function
  * @returns {boolean} - Whether the module is properly configured

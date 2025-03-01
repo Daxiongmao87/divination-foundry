@@ -110,11 +110,6 @@
   border-radius: 50%;
 }
 
-/* Journal entry button */
-.journal-sheet .window-header .divination-button {
-  margin-right: 5px;
-}
-
 /* Thinking animation */
 @keyframes thinking {
   0% { opacity: 0.3; }

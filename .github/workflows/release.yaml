@@ -17,6 +17,11 @@ jobs:
         with:
           ref: ${{ github.ref }}
           fetch-depth: 0  # Fetch all history for all tags and branches
+          submodules: recursive  # Add this line to check out all submodules recursively
+
+      - name: Initialize and update submodules
+        run: |
+          git submodule update --init --recursive
 
       - name: Install jq and moreutils
         run: sudo apt-get update && sudo apt-get install -y jq moreutils
