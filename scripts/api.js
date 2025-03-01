@@ -6,46 +6,21 @@ import { SYSTEM_PROMPT } from './settings.js';
  * @param {Object} params - Message parameters
  * @param {String} params.message - The user's message
  * @param {Array} [params.history] - Previous message history
- * @param {String} [params.model] - The model to use
  * @returns {Promise<String>} - The AI response
  */
 export async function sendMessage(params) {
   // Get settings
-  const useHttps = game.settings.get('divination', 'https');
-  const apiUrl = (useHttps ? 'https://' : 'http://') + game.settings.get('divination', 'textGenerationApiUrl');
+  const apiUrl = game.settings.get('divination', 'textGenerationApiUrl');
   const apiKey = game.settings.get('divination', 'apiKey');
   const payloadTemplate = game.settings.get('divination', 'payloadJson');
   const responseJsonPath = game.settings.get('divination', 'responseJsonPath');
   const reasoningEndTag = game.settings.get('divination', 'reasoningEndTag');
   const reasoningDisplay = game.settings.get('divination', 'reasoningDisplay');
   const historyLimit = game.settings.get('divination', 'messageHistory');
-  const globalContext = game.settings.get('divination', 'globalContext');
-  
-  // Use default model if not specified
-  const model = params.model || game.settings.get('divination', 'models').split(',')[0].trim();
+  const systemPrompt = game.settings.get('divination', 'systemPrompt');
   
   // Prepare message history
   let messages = params.history || [];
-  
-  // Add global context if it exists
-  if (globalContext && globalContext.trim() !== '') {
-    // If we don't have a system message yet, add global context to a new one
-    const systemMessage = messages.find(m => m.role === 'system');
-    
-    if (!systemMessage) {
-      messages.unshift({
-        role: 'system',
-        content: globalContext
-      });
-    } else {
-      // If we already have a system message and global context has changed,
-      // update the system message to include the global context
-      const existingContent = systemMessage.content;
-      if (!existingContent.includes(globalContext)) {
-        systemMessage.content = `${globalContext}\n\n${existingContent}`;
-      }
-    }
-  }
   
   // Format conversation history into a structured context
   // We'll do this only if we have multiple messages for context
@@ -80,7 +55,7 @@ export async function sendMessage(params) {
   // Convert messages to string for template replacement
   const messagesStr = JSON.stringify(messages);
   
-  // Log the template before replacement
+  // Log payload template length for debugging
   console.log("Divination | Original payload template length:", payloadTemplate.length);
   
   // Check for potential issues in the payload template
@@ -91,17 +66,16 @@ export async function sendMessage(params) {
   
   // Prepare the replacements object with all potential variables
   const replacements = {
-    'Model': model,
     'UserMessage': contextualHistory ? `${contextualHistory}\n\nUser: ${params.message}` : params.message,
     'MessageHistory': messages, // Pass the object directly for proper JSON handling
-    'SystemMessage': globalContext || SYSTEM_PROMPT,
+    'SystemMessage': systemPrompt,
     'Context': contextualHistory // Add the formatted context as a separate variable
   };
   
   // Use the helper function to safely replace all variables
   let filledTemplate = replaceTemplateVariables(payloadTemplate, replacements);
   
-  // Log the result of the replacement
+  // Log filled template length for debugging
   console.log("Divination | Filled template length:", filledTemplate.length);
   
   // Check for unprocessed template variables
@@ -167,14 +141,13 @@ export async function sendMessage(params) {
         payload = JSON.parse(cleanedTemplate);
         console.log("Divination | Successfully parsed cleaned template");
       } catch (secondError) {
-        // Still failing, try using a robust method to create a valid JSON object
+        // Still failing, throw the error to use fallback
         log({
           message: "Cleaned template still fails to parse, using fallback",
           error: secondError,
           type: ["warn"]
         });
         
-        // Just use a simple valid payload as fallback
         throw secondError; // Let the outer catch handle it
       }
     }
@@ -187,7 +160,6 @@ export async function sendMessage(params) {
     
     // Create a simple valid payload as fallback
     payload = {
-      model: model,
       messages: messages
     };
     
@@ -214,10 +186,10 @@ export async function sendMessage(params) {
     headers["Authorization"] = `Bearer ${apiKey}`;
   }
   
-  // Make the API request
+  // Make the API request with retry logic
   let response = null;
   let tries = 0;
-  const maxTries = 3; // Fixed maximum retry count
+  const maxTries = 3;
   let error = null;
   
   while (tries < maxTries && !response) {

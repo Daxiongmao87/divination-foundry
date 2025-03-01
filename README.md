@@ -39,8 +39,9 @@ After installation, configure the module with your AI service settings:
 1. Go to "Game Settings" > "Configure Settings" > "Module Settings"
 2. Select "Divination" from the sidebar
 3. Configure these essential settings:
-   - **Text Generation API URL**: Your AI service endpoint
+   - **Text Generation API URL**: Complete URL for your AI service endpoint (include https:// or http://)
    - **API Key**: Your API key (required for most services)
+   - **System Prompt**: The instructions that define the AI's behavior
 
 ## Usage
 
@@ -57,17 +58,17 @@ Each AI service requires specific configuration. Here are examples for popular s
 
 ### OpenAI
 
-- **Text Generation API URL**: `api.openai.com/v1/chat/completions`
+- **Text Generation API URL**: `https://api.openai.com/v1/chat/completions`
 - **API Key**: Your OpenAI API key
 - **Response JSON Path**: `choices.0.message.content`
 - **Payload JSON Template**:
   ```json
   {
-    "model": "{{Model}}",
+    "model": "gpt-4o",
     "messages": [
       {
         "role": "system",
-        "content": "You are a helpful assistant in a tabletop roleplaying game."
+        "content": "{{SystemMessage}}"
       },
       {
         "role": "user",
@@ -79,18 +80,18 @@ Each AI service requires specific configuration. Here are examples for popular s
 
 ### Anthropic (Claude)
 
-- **Text Generation API URL**: `api.anthropic.com/v1/messages`
+- **Text Generation API URL**: `https://api.anthropic.com/v1/messages`
 - **API Key**: Your Anthropic API key
 - **API Key Header**: Use `x-api-key` in headers (not Bearer token)
 - **Response JSON Path**: `content.0.text`
 - **Payload JSON Template**:
   ```json
   {
-    "model": "{{Model}}",
+    "model": "claude-3-opus-20240229",
     "messages": [
       {
         "role": "system",
-        "content": "You are a helpful assistant in a tabletop roleplaying game. Provide concise, useful information and ideas that enhance the game experience."
+        "content": "{{SystemMessage}}"
       },
       {
         "role": "user",
@@ -104,11 +105,11 @@ Each AI service requires specific configuration. Here are examples for popular s
 > **Note for older Claude versions**: If using an older Claude version that doesn't support system messages, use this template instead:
 > ```json
 > {
->   "model": "{{Model}}",
+>   "model": "claude-2",
 >   "messages": [
 >     {
 >       "role": "user",
->       "content": "You are a helpful assistant in a tabletop roleplaying game. Provide concise, useful information and ideas that enhance the game experience.\n\n{{UserMessage}}"
+>       "content": "{{SystemMessage}}\n\n{{UserMessage}}"
 >     }
 >   ],
 >   "max_tokens": 1024
@@ -117,17 +118,16 @@ Each AI service requires specific configuration. Here are examples for popular s
 
 ### Ollama (Local LLM)
 
-- **Text Generation API URL**: `localhost:11434/api/chat`
-- **Enable HTTPS**: Disabled
+- **Text Generation API URL**: `http://localhost:11434/api/chat`
 - **Response JSON Path**: `message.content`
 - **Payload JSON Template**:
   ```json
   {
-    "model": "{{Model}}",
+    "model": "llama3",
     "messages": [
       {
         "role": "system",
-        "content": "You are a helpful assistant in a tabletop roleplaying game."
+        "content": "{{SystemMessage}}"
       },
       {
         "role": "user",
@@ -140,17 +140,17 @@ Each AI service requires specific configuration. Here are examples for popular s
 
 ### Mistral AI
 
-- **Text Generation API URL**: `api.mistral.ai/v1/chat/completions`
+- **Text Generation API URL**: `https://api.mistral.ai/v1/chat/completions`
 - **API Key**: Your Mistral API key
 - **Response JSON Path**: `choices.0.message.content`
 - **Payload JSON Template**:
   ```json
   {
-    "model": "{{Model}}",
+    "model": "mistral-large-latest",
     "messages": [
       {
         "role": "system",
-        "content": "You are a helpful assistant in a tabletop roleplaying game."
+        "content": "{{SystemMessage}}"
       },
       {
         "role": "user",
@@ -163,16 +163,16 @@ Each AI service requires specific configuration. Here are examples for popular s
 
 ### LM Studio (Local)
 
-- **Text Generation API URL**: `localhost:1234/v1/chat/completions`
-- **Enable HTTPS**: Disabled
+- **Text Generation API URL**: `http://localhost:1234/v1/chat/completions`
 - **Response JSON Path**: `choices.0.message.content`
 - **Payload JSON Template**:
   ```json
   {
+    "model": "default", 
     "messages": [
       {
         "role": "system",
-        "content": "You are a helpful assistant in a tabletop roleplaying game."
+        "content": "{{SystemMessage}}"
       },
       {
         "role": "user",

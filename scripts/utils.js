@@ -41,10 +41,8 @@ export function log(options) {
  * @returns {Boolean} - Whether the JSON is valid against the schema
  */
 export function validateJsonAgainstSchema(json, schema) {
-  // This is a very basic implementation - in a real-world scenario,
-  // you might want to use a library like ajv for robust validation
+  // Simple validation implementation - for production use, consider a library like ajv
   try {
-    // For now, just check if the object exists and is an object
     return json && typeof json === 'object';
   } catch (error) {
     log({

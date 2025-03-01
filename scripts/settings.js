@@ -10,11 +10,11 @@ export function registerSettings() {
      * Default payload JSON for API calls
      */
     const defaultPayloadJson = `{
-  "model": "{{Model}}",
+  "model": "gpt-4o",
   "messages": [
     {
       "role": "system",
-      "content": "${SYSTEM_PROMPT}"
+      "content": "{{SystemMessage}}"
     },
     {
       "role": "user",
@@ -44,22 +44,13 @@ export function registerSettings() {
     });
 
     // API Configuration Settings
-    game.settings.register('divination', 'https', {
-        name: 'Enable HTTPS',
-        hint: 'Whether to use HTTPS or HTTP for the API URL. Disable this if using localhost',
-        scope: 'world',
-        config: true,
-        type: Boolean,
-        default: true,
-    });
-
     game.settings.register('divination', 'textGenerationApiUrl', {
         name: 'Text Generation API URL',
-        hint: 'Enter the target URL for the text generation API endpoint.',
+        hint: 'Enter the complete URL for the text generation API endpoint (include https:// or http://)',
         scope: 'world',
         config: true,
         type: String,
-        default: 'api.openai.com/v1/chat/completions',
+        default: 'https://api.openai.com/v1/chat/completions',
     });
 
     game.settings.register('divination', 'apiKey', {
@@ -69,15 +60,6 @@ export function registerSettings() {
         config: true,
         type: String,
         default: ""
-    });
-
-    game.settings.register('divination', 'models', {
-        name: "Available Models",
-        hint: "Enter the models available for text generation in a comma-delimited list. The first model will be used by default.",
-        scope: 'world',
-        config: true,
-        type: String,
-        default: "gpt-4o, gpt-3.5-turbo"
     });
 
     game.settings.register('divination', 'payloadJson', {
@@ -130,13 +112,13 @@ export function registerSettings() {
         default: 10
     });
 
-    game.settings.register('divination', 'globalContext', {
-        name: "Global Context",
-        hint: "Additional context that will be considered in all conversations.",
+    game.settings.register('divination', 'systemPrompt', {
+        name: "System Prompt",
+        hint: "The system prompt that defines the AI's behavior and capabilities. Will be sent with every conversation.",
         scope: 'world',
         config: true,
         type: String,
-        default: ''
+        default: SYSTEM_PROMPT
     });
 
     // Register permission for using Divination
@@ -284,12 +266,12 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
         }
       );
       
-      // Convert the globalContext setting field
+      // Convert the systemPrompt setting field
       convertSettingToTextarea(
         html,
         "divination",
-        "globalContext",
-        "width: 518px; min-height: 80px; height: 120px;",
+        "systemPrompt",
+        "width: 518px; min-height: 80px; height: 120px; white-space: normal; word-wrap: break-word;",
         (settingDiv) => {
           // Reposition the form-fields div so that it appears after the <p class="notes"> element
           const notesEl = settingDiv.find("p.notes");
@@ -325,8 +307,8 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
             convertSettingToTextarea(
               html,
               "divination",
-              "globalContext",
-              "width: 518px; min-height: 80px; height: 120px;",
+              "systemPrompt",
+              "width: 518px; min-height: 80px; height: 120px; white-space: normal; word-wrap: break-word;",
               (settingDiv) => {
                 const notesEl = settingDiv.find("p.notes");
                 const formFieldsEl = settingDiv.find("div.form-fields");

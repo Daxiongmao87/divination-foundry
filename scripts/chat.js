@@ -34,7 +34,6 @@ export class DivinationChat {
 
     this.history = this.options.history;
     this.id = this.options.id || randomID();
-    this.currentModelIndex = 0;
     this.processing = false;
 
     // Get the appropriate ChatModal class (the extended version if available)
@@ -176,14 +175,6 @@ export class DivinationChat {
     const assistantName = game.settings.get('divination', 'assistantName');
     const assistantAvatar = game.settings.get('divination', 'assistantAvatar');
     
-    // Get available models from settings
-    const models = game.settings.get('divination', 'models')
-      .split(',')
-      .map(m => m.trim())
-      .filter(m => m);
-
-    const modelName = models[0] || "AI Assistant";
-
     // Create greeting message
     const greetingMessage = `Greetings! I am ${assistantName}, and I will provide the answers you seek.`;
     
@@ -421,7 +412,7 @@ export class DivinationChat {
   }
 
   /**
-   * Handle a user message
+   * Handle a user message and send it to the AI
    * @param {string} message - The user's message
    * @private
    */
@@ -438,25 +429,15 @@ export class DivinationChat {
       const assistantName = game.settings.get('divination', 'assistantName');
       const assistantAvatar = game.settings.get('divination', 'assistantAvatar');
       
-      // Get the model to use
-      const models = game.settings.get('divination', 'models')
-        .split(',')
-        .map(m => m.trim())
-        .filter(m => m);
-      
-      const model = models[this.currentModelIndex] || models[0] || "";
-      
       // Format user message with markdown parser
       const formattedUserMessage = MarkdownParser.parse(message);
       
-      // ---------- CREATE NEW MESSAGES ARRAY ----------
-      // This is the key change - we're rebuilding the entire messages array
-      // to ensure the thinking message appears
+      // Initialize messages display sequence
       
-      // 1. Save all existing messages
+      // Store existing messages
       const existingMessages = [...ChatModal.data.messages];
       
-      // 2. Add user message to the array
+      // Add user message to the array
       const userMessage = {
         _id: randomID(),
         content: formattedUserMessage,
@@ -467,7 +448,7 @@ export class DivinationChat {
       };
       existingMessages.push(userMessage);
       
-      // 3. Create thinking message
+      // Prepare thinking message (will be shown after delay)
       const thinkingId = randomID();
       const thinkingMessage = {
         _id: thinkingId,
@@ -478,50 +459,63 @@ export class DivinationChat {
         isCurrentUser: false
       };
       
-      // 4. First render with just the user's message
+      // Render initial view with just the user's message
       ChatModal.data.messages = existingMessages;
       await this.chatWindow.render(true);
       
-      // 5. Force DOM manipulation to add the thinking message directly
-      setTimeout(() => {
-        // Append thinking message to array
+      // Generate a random delay between 500-1000ms for thinking indicator
+      const thinkingDelay = Math.floor(Math.random() * 501) + 500;
+      
+      // Track if thinking message has been displayed
+      let thinkingMessageShown = false;
+      
+      // Schedule thinking message to appear after random delay
+      const thinkingTimeout = setTimeout(() => {
+        thinkingMessageShown = true;
+        
+        // Display thinking message
         existingMessages.push(thinkingMessage);
         ChatModal.data.messages = existingMessages;
         
-        // Force a full rerender
+        // Update the chat display
         this.chatWindow.render(true);
         
-        // Manually scroll to bottom after a short delay to ensure DOM is updated
+        // Ensure chat scrolls to bottom
         setTimeout(() => {
           const messageContainer = this.chatWindow.element.find('.chat-messages.message-list')[0];
           if (messageContainer) {
             messageContainer.scrollTop = messageContainer.scrollHeight;
           }
         }, 10);
-      }, 50);
+      }, thinkingDelay);
       
-      // Wait a bit to ensure thinking message is rendered before API call
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Send to API
+      // Initiate API call immediately (in parallel with thinking indicator)
       const response = await sendMessage({
-        message: message, // Send the plain message without HTML formatting
-        history: this.history,
-        model: model
+        message: message,
+        history: this.history
       });
       
-      // Update history
+      // Cancel thinking message display if API responded quickly
+      clearTimeout(thinkingTimeout);
+      
+      // Update conversation history
       this.history = response.history;
       
-      // ---------- REPLACE MESSAGES ARRAY AGAIN ----------
+      // Prepare final message display
+      let finalMessages;
       
-      // 1. Get current messages and filter out the thinking message
-      const finalMessages = ChatModal.data.messages.filter(m => m._id !== thinkingId);
+      if (thinkingMessageShown) {
+        // Remove thinking message if it was shown
+        finalMessages = ChatModal.data.messages.filter(m => m._id !== thinkingId);
+      } else {
+        // Use existing messages if thinking wasn't shown
+        finalMessages = existingMessages;
+      }
       
-      // 2. Add response message
+      // Add AI response message
       const responseMessage = {
         _id: randomID(),
-        content: MarkdownParser.parse(response.content), // Parse the AI response as markdown
+        content: MarkdownParser.parse(response.content),
         sender: assistantName,
         img: assistantAvatar,
         cornerText: this._getTimestamp(),
@@ -529,7 +523,7 @@ export class DivinationChat {
       };
       finalMessages.push(responseMessage);
       
-      // 3. Replace messages array and render
+      // Update chat display with final messages
       ChatModal.data.messages = finalMessages;
       await this.chatWindow.render(true);
       
@@ -559,31 +553,5 @@ export class DivinationChat {
     } finally {
       this.processing = false;
     }
-  }
-
-  /**
-   * Switch to the next available model
-   */
-  switchModel() {
-    const models = game.settings.get('divination', 'models')
-      .split(',')
-      .map(m => m.trim())
-      .filter(m => m);
-    
-    if (models.length <= 1) return;
-    
-    this.currentModelIndex = (this.currentModelIndex + 1) % models.length;
-    const newModel = models[this.currentModelIndex];
-    
-    // Get assistant name and avatar
-    const assistantName = game.settings.get('divination', 'assistantName');
-    const assistantAvatar = game.settings.get('divination', 'assistantAvatar');
-    
-    this.chatWindow.addMessage({
-      content: `<p>Switched to model: ${newModel}</p>`,
-      sender: "System",
-      cornerText: this._getTimestamp(),
-      img: "icons/svg/upgrade.svg"
-    });
   }
 } 

@@ -6,7 +6,10 @@ import { ChatModal, TabManager, registerGlobals } from './fimlib/main.js';
 // Global variable to store our extended ChatModal class
 let DivinationChatModal = null;
 
-// Function to get the correct ChatModal class
+/**
+ * Returns the correct ChatModal class for Divination
+ * @returns {Class} - The ChatModal class to use
+ */
 export function getChatModalClass() {
     return DivinationChatModal || ChatModal;
 }
@@ -78,7 +81,9 @@ Hooks.once('ready', async () => {
     }
 });
 
-// Add a Divination button to the chat controls
+/**
+ * Adds a Divination button to the chat controls
+ */
 Hooks.on('renderChatLog', (app, html, data) => {
     if (!hasPermission(game.user)) return;
     
@@ -107,7 +112,9 @@ Hooks.on('renderChatLog', (app, html, data) => {
     controlButtons.prepend(divinationButton);
 });
 
-// Add divination button to the sidebar menu
+/**
+ * Adds Divination button to the sidebar menu
+ */
 Hooks.on('getSceneControlButtons', (controls) => {
     if (!hasPermission(game.user)) return;
     
@@ -157,7 +164,9 @@ Hooks.on('getSceneControlButtons', (controls) => {
     }
 });
 
-// Listen for individual setting changes and update buttons immediately
+/**
+ * Listen for individual setting changes and update buttons immediately
+ */
 Hooks.on('updateSetting', (setting) => {
     if (setting.key.startsWith('divination.')) {
         log({message: `Divination setting updated: ${setting.key}`, type: ["debug"]});
@@ -165,7 +174,9 @@ Hooks.on('updateSetting', (setting) => {
     }
 });
 
-// Also listen for the entire settings form closing
+/**
+ * Listen for the entire settings form closing
+ */
 Hooks.on('closeSettingsConfig', () => {
     log({message: "Settings form closed, updating Divination UI", type: ["debug"]});
     updateDivinationUI();
