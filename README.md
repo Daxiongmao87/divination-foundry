@@ -4,6 +4,8 @@
 ![Latest Release](https://img.shields.io/github/v/release/Daxiongmao87/divination-foundry?label=latest%20release)
 ![GitHub all releases](https://img.shields.io/github/downloads/Daxiongmao87/divination-foundry/total)
 
+[<img src="https://img.shields.io/badge/Support%20My%20Work-Buy%20me%20a%20coffee%20%E2%98%95-chocolate?style=plastic">](https://www.buymeacoffee.com/daxiongmao87)
+
 ## Overview
 
 Divination is a Foundry VTT module that connects your tabletop games to AI language models. It provides a chat interface that lets Game Masters and players get instant AI assistance during gameplay.
