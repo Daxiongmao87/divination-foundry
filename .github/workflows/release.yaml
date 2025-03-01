@@ -1,0 +1,121 @@
+name: Automated Release Workflow
+
+on:
+  push:
+    branches:
+      - '*-release'
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0  # Fetch all history for all tags and branches
+
+      - name: Install jq and moreutils
+        run: sudo apt-get update && sudo apt-get install -y jq moreutils
+
+      - name: Update module.json with version
+        run: |
+          VERSION=${GITHUB_REF#refs/heads/}
+          VERSION=${VERSION%-release}
+          jq ".version = \"$VERSION\"" module.json | sponge module.json
+
+      - name: Commit Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add module.json
+          git commit -m "Update manifest and download links in module.json"
+          git push
+
+      - name: Define Version and Tag
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "TAG_NAME=${GITHUB_REF#refs/heads/}" | sed 's/-release$//' >> $GITHUB_ENV
+        id: version_tag
+
+      - name: Get Latest Release Tag
+        id: latest_release
+        run: |
+          LATEST_TAG=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest \
+            | jq -r '.tag_name')
+          echo "PREV_TAG=$LATEST_TAG" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Changelog
+        run: |
+          if [ -z "${{ env.PREV_TAG }}" ]; then
+            # If PREV_TAG is empty, default to initial commit or another base
+            git log --pretty=format:'%h %s' --reverse > changelog.txt
+          else
+            git log ${{ env.PREV_TAG }}...${{ github.ref_name }} --pretty=format:'%h %s' --reverse > changelog.txt
+          fi
+
+
+      - name: Create Tag and Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: Release ${{ env.TAG_NAME }}
+          body_path: changelog.txt  # Read release body from a file
+          draft: false
+          prerelease: false
+
+
+      - name: Upload module.json
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./module.json
+          asset_name: module.json
+          asset_content_type: application/json
+
+      - name: Zip Repository Contents
+        run: zip -r -X module.zip . -x "*.github/*" -x "*.git/*"
+
+      - name: Upload module.zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./module.zip
+          asset_name: module.zip
+          asset_content_type: application/zip
+      - name: Get module.json compatibility values
+        id: module_json
+        run: |
+          echo "::set-output name=minimum::$(jq -r '.compatibility.minimum' module.json)"
+          echo "::set-output name=verified::$(jq -r '.compatibility.verified' module.json)"
+      - name: Update FoundryVTT Package
+        run: |
+          curl -X POST https://api.foundryvtt.com/_api/packages/release_version/ \
+            -H "Content-Type: application/json" \
+            -H "Authorization: ${{ secrets.FOUNDRY_API_KEY }}" \
+            -d '{
+              "id": "divination",
+              "dry-run": false,
+              "release": {
+                "version": "${{ env.VERSION }}",
+                "manifest": "http://github.com/daxiongmao87/divination-foundry/releases/latest/download/module.json",
+                "notes": "https://github.com/daxiongmao87/divination-foundry/releases/tag/${{ env.TAG_NAME }}",
+                "compatibility": {
+                  "minimum": "${{ steps.module_json.outputs.minimum }}",
+                  "verified": "${{ steps.module_json.outputs.verified }}",
+                }
+              }
+            }'
