@@ -1,7 +1,7 @@
 import { log } from './utils.js';
 import { sendMessage } from './api.js';
 import { hasPermission } from './settings.js';
-import { ChatModal, MarkdownParser } from './fimlib/src/main.js';
+import { ChatModal, MarkdownParser } from './fimlib/main.js';
 import { getChatModalClass } from './main.js';
 
 /**

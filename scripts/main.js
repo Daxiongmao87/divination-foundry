@@ -1,7 +1,7 @@
 import { registerSettings, hasPermission } from './settings.js';
 import { DivinationChat } from './chat.js';
 import { log } from './utils.js';
-import { ChatModal, TabManager, registerGlobals } from './fimlib/src/main.js';
+import { ChatModal, TabManager, registerGlobals } from './fimlib/main.js';
 
 // Global variable to store our extended ChatModal class
 let DivinationChatModal = null;
@@ -32,7 +32,7 @@ Hooks.once('init', async () => {
         DivinationChatModal = class extends ChatModal {
             static get defaultOptions() {
                 const options = super.defaultOptions;
-                options.template = "modules/divination/scripts/fimlib/src/templates/chat-modal.html";
+                options.template = "modules/divination/scripts/fimlib/templates/chat-modal.html";
                 return options;
             }
         };

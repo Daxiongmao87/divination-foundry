@@ -19,11 +19,11 @@
   ],
   "styles": [
     "styles/divination.css",
-    "scripts/fimlib/src/styles/chat-modal.css",
-    "scripts/fimlib/src/styles/markdown.css"
+    "scripts/fimlib/styles/chat-modal.css",
+    "scripts/fimlib/styles/markdown.css"
   ],
   "templates": [
-    "scripts/fimlib/src/templates/chat-modal.html"
+    "scripts/fimlib/templates/chat-modal.html"
   ],
   "url": "https://github.com/Daxiongmao87/divination-foundry",
   "manifest": "https://github.com/Daxiongmao87/divination-foundry/releases/latest/download/module.json",
