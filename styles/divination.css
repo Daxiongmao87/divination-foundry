@@ -16,7 +16,7 @@
 /* Sidebar Icon Styling */
 .scene-control[data-control="divination"] i.fas.fa-crystal-ball,
 .control-tool[data-tool="divination"] i.fas.fa-crystal-ball {
-  color: var(--divination-gold);
+  color: #fff;
   text-shadow: 0 0 5px var(--divination-gold), 0 0 10px rgba(255, 215, 0, 0.4);
   transition: all 0.3s ease;
 }
