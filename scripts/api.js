@@ -72,6 +72,24 @@ export async function sendMessage(params) {
     'Context': contextualHistory // Add the formatted context as a separate variable
   };
   
+  // If we have context items, add them to the system prompt
+  if (params.contextItems && params.contextItems.length > 0) {
+    let contextInfo = "Additional reference material:\n\n";
+    
+    params.contextItems.forEach(item => {
+      if (item.type === 'journal') {
+        contextInfo += `## JOURNAL: ${item.name}\n\n${item.content}\n\n`;
+      } else if (item.type === 'page') {
+        contextInfo += `## PAGE: ${item.name} (from ${item.journalName || 'journal'})\n\n${item.content}\n\n`;
+      } else {
+        contextInfo += `## ${item.name || 'DOCUMENT'}\n\n${item.content}\n\n`;
+      }
+    });
+    
+    // Combine the original system prompt with the context info
+    replacements['SystemMessage'] = systemPrompt + "\n\n" + contextInfo;
+  }
+  
   // Use the helper function to safely replace all variables
   let filledTemplate = replaceTemplateVariables(payloadTemplate, replacements);
   

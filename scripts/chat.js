@@ -594,6 +594,37 @@ export class DivinationChat {
   }
 
   /**
+   * Format bot messages with markdown and special tokens
+   * @param {string} message - The bot's message
+   * @returns {string} - Formatted HTML
+   * @private
+   */
+  _formatBotMessage(message) {
+    if (!message) return '<p>No response received.</p>';
+    
+    try {
+      // Check if message already has HTML tags
+      const hasHtmlTags = /<\/?[a-z][\s\S]*>/i.test(message);
+      
+      let formattedMessage;
+      
+      if (hasHtmlTags) {
+        // If it already has HTML, just wrap in a div
+        formattedMessage = `<div class="divination-response">${message}</div>`;
+      } else {
+        // Otherwise parse markdown
+        formattedMessage = `<div class="divination-response">${MarkdownParser.parse(message)}</div>`;
+      }
+      
+      return formattedMessage;
+    } catch (error) {
+      console.error("Divination | Error formatting message:", error);
+      // Return raw message if formatting fails
+      return `<div class="divination-response"><p>${message}</p></div>`;
+    }
+  }
+
+  /**
    * Handler for user messages
    * @param {string} message - The user's message
    * @private
@@ -627,31 +658,6 @@ export class DivinationChat {
         content: message
       });
       
-      // Add context to the API request if any
-      const enhancedHistory = [...this.history];
-      
-      // Add context items as system messages at the beginning of history
-      if (this.contextItems.length > 0) {
-        // Combine all context items into a single system message
-        let contextMessage = "Here is additional context information:\n\n";
-        
-        this.contextItems.forEach(item => {
-          if (item.type === 'journal') {
-            contextMessage += `## JOURNAL: ${item.name}\n\n${item.content}\n\n`;
-          } else if (item.type === 'page') {
-            contextMessage += `## PAGE: ${item.name} (from ${item.journalName})\n\n${item.content}\n\n`;
-          } else {
-            contextMessage += `## ${item.name || 'CONTEXT'}\n\n${item.content}\n\n`;
-          }
-        });
-        
-        // Insert the context as a system message at the beginning of history
-        enhancedHistory.unshift({
-          role: 'system',
-          content: contextMessage
-        });
-      }
-      
       // Get assistant name
       const assistantName = game.settings.get('divination', 'assistantName');
       const assistantAvatar = game.settings.get('divination', 'assistantAvatar');
@@ -665,7 +671,12 @@ export class DivinationChat {
       });
       
       // Generate response from API
-      const response = await sendMessage(enhancedHistory);
+      // Pass context items separately from history to keep them as reference material
+      const response = await sendMessage({ 
+        message: message,
+        history: this.history,
+        contextItems: this.contextItems 
+      });
       
       // Remove thinking indicator
       if (thinkingMessage) {
@@ -683,8 +694,26 @@ export class DivinationChat {
         return;
       }
       
-      // Get bot response
-      const botMessage = response.response || "I'm sorry, I couldn't generate a response.";
+      // Get bot response - use proper property based on the returned response object
+      let botMessage = "";
+      
+      // Check what format the response is in
+      if (typeof response === 'string') {
+        // Simple string response
+        botMessage = response;
+      } else if (response.response) {
+        // Direct response property
+        botMessage = response.response;
+      } else if (response.content) {
+        // Content property (from the API wrapper)
+        botMessage = response.content;
+      } else if (response.rawContent) {
+        // Raw content property
+        botMessage = response.rawContent;
+      } else {
+        // Fallback
+        botMessage = "I'm sorry, I couldn't generate a response.";
+      }
       
       // Add to conversation history
       this.history.push({
@@ -699,6 +728,12 @@ export class DivinationChat {
         cornerText: this._getTimestamp(),
         img: assistantAvatar
       });
+      
+      // Make sure to refresh the context container
+      this._setupContextContainer();
+      
+      // Update the context items display
+      this._updateContextItems();
       
       // Set up copy buttons for the new message
       this._setupCopyButtons();
