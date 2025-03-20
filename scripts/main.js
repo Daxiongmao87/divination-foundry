@@ -174,7 +174,7 @@ Hooks.on('renderJournalSheet', (app, html, data) => {
             // Create the page button
             const pageButton = $(`
                 <a class="divination-page-button" data-tooltip="Add page to Divination context">
-                    <i class="fas fa-scroll"></i>
+                    <i class="fas fa-crystal-ball"></i>
                 </a>
             `);
             
@@ -208,7 +208,6 @@ Hooks.on('renderJournalSheet', (app, html, data) => {
                     chat.addContext(pageContext);
                     
                     // Show success notification
-                    ui.notifications.info(`Added page "${page.name}" to Divination context`);
                 } catch (error) {
                     console.error("Divination | Error adding page context:", error);
                     ui.notifications.error("Failed to add page to context. See console for details.");
@@ -248,7 +247,7 @@ Hooks.on('renderJournalSheet', (app, html, data) => {
         const buttonTemplate = $(`
             <template id="divination-page-button-template">
                 <a class="divination-page-button" data-tooltip="Add page to Divination context">
-                    <i class="fas fa-scroll"></i>
+                    <i class="fas fa-crystal-ball"></i>
                 </a>
             </template>
         `);
@@ -330,8 +329,6 @@ Hooks.on('renderJournalSheet', (app, html, data) => {
                 // Add context to the chat
                 chat.addContext(pageContext);
                 
-                // Show success notification
-                ui.notifications.info(`Added page "${page.name}" to Divination context`);
             } catch (error) {
                 console.error("Divination | Error adding page context:", error);
                 ui.notifications.error("Failed to add page to context. See console for details.");
@@ -358,7 +355,7 @@ Hooks.on('renderJournalSheet', (app, html, data) => {
             // Create the button (simpler structure)
             const pageButton = $(`
                 <a class="divination-page-button" data-tooltip="Add page to Divination">
-                    <i class="fas fa-scroll"></i>
+                    <i class="fas fa-crystal-ball"></i>
                 </a>
             `);
             
@@ -391,8 +388,6 @@ Hooks.on('renderJournalSheet', (app, html, data) => {
                     // Add context to the chat
                     chat.addContext(pageContext);
                     
-                    // Show success notification
-                    ui.notifications.info(`Added page "${page.name}" to Divination context`);
                 } catch (error) {
                     console.error("Divination | Error adding page context:", error);
                     ui.notifications.error("Failed to add page to context. See console for details.");
@@ -408,59 +403,7 @@ Hooks.on('renderJournalSheet', (app, html, data) => {
     addPageButtonsToSidebar();
     // Try the direct DOM approach based on the user's HTML
     addButtonsToPages();
-    
-    // Add CSS for the buttons
-    const style = $(`
-        <style>
-            /* Journal button in header */
-            .divination-journal-all {
-                margin-right: 4px;
-            }
-            
-            /* Page buttons in sidebar */
-            .directory-item .page-heading {
-                position: relative;
-            }
-            
-            .divination-page-button {
-                position: absolute;
-                right: 30px;
-                top: 50%;
-                transform: translateY(-50%);
-                color: #666;
-                opacity: 0.7;
-                font-size: 12px;
-                transition: all 0.2s ease;
-                z-index: 100;
-                background: rgba(255, 255, 255, 0.7);
-                padding: 2px 5px;
-                border-radius: 3px;
-            }
-            
-            .divination-page-button:hover {
-                color: #000;
-                opacity: 1;
-                background: rgba(255, 255, 255, 0.9);
-            }
-            
-            /* Make sure buttons are visible on hover */
-            .directory-item .divination-page-button {
-                display: none !important;
-            }
-            
-            .directory-item:hover .divination-page-button {
-                display: inline-flex !important;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            /* Add some margin after the icon */
-            .divination-page-button i {
-                margin-right: 4px;
-            }
-        </style>
-    `);
-    html.append(style);
+
 });
 
 /**

@@ -15,14 +15,20 @@
 
 /* Sidebar Icon Styling */
 .scene-control[data-control="divination"] i.fas.fa-crystal-ball,
-.control-tool[data-tool="divination"] i.fas.fa-crystal-ball {
+.control-tool[data-tool="divination"] i.fas.fa-crystal-ball,
+a.action-button.divination-journal-all i.fas.fa-crystal-ball,
+a.divination-page-button i.fas.fa-crystal-ball {
   color: #fff;
   text-shadow: 0 0 5px var(--divination-gold), 0 0 10px rgba(255, 215, 0, 0.4);
   transition: all 0.3s ease;
 }
 
+
+
 .scene-control[data-control="divination"]:hover i.fas.fa-crystal-ball,
-.control-tool[data-tool="divination"]:hover i.fas.fa-crystal-ball {
+.control-tool[data-tool="divination"]:hover i.fas.fa-crystal-ball,
+a.action-button.divination-journal-all:hover i.fas.fa-crystal-ball,
+a.divination-page-button:hover i.fas.fa-crystal-ball {
   color: #fff;
   text-shadow: 0 0 8px var(--divination-gold), 0 0 15px var(--divination-gold), 0 0 20px rgba(255, 215, 0, 0.7);
   transform: scale(1.1);
@@ -68,6 +74,44 @@
   transform: none;
 }
 
+.divination-context-container {
+  padding: 5px;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  background: url(/ui/parchment.jpg) repeat;
+  max-height: 100px;
+  overflow-y: hidden;
+}
+.divination-context-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 2px;
+}
+.divination-context-item {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.05);
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 2px 5px;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+.divination-context-item-icon {
+  margin-right: 3px;
+}
+.divination-context-item-remove {
+  margin-left: 5px;
+  cursor: pointer;
+  color: #999;
+}
+.divination-context-item-remove:hover {
+  color: #f00;
+}
+.divination-context-container:empty {
+  display: none;
+}
 /* Hidden Elements */
 .divination-chat-button {
   display: none;
@@ -241,48 +285,42 @@
     text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
+/* Journal button in header */
+.divination-journal-all {
+  margin-right: 4px;
+}
+
+/* Page buttons in sidebar */
+.directory-item .page-heading {
+  position: relative;
+}
+
+
 /* Page Button in Sidebar */
 .divination-page-button {
     position: absolute;
     right: 30px;
     top: 50%;
     transform: translateY(-50%);
-    color: #666;
-    opacity: 0.7;
-    font-size: 12px;
     transition: all 0.2s ease;
     z-index: 100;
-    background-color: rgba(255, 255, 255, 0.6);
     padding: 2px 5px;
-    border-radius: 3px;
+    border: none;
+    background: none;
 }
 
-.divination-page-button:hover {
-    color: #000;
-    opacity: 1;
-    background-color: rgba(255, 255, 255, 0.8);
-}
 
 /* Override any potential display properties to ensure visibility */
 .directory-item .divination-page-button {
-    display: none !important;
+    display: inline-flex;
 }
 
 .directory-item:hover .divination-page-button {
-    display: inline-flex !important;
+
     align-items: center;
     justify-content: center;
 }
 
-/* Context Items Container */
-.divination-context-container {
-    padding: 5px;
-    border-top: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
-    background-color: rgba(0, 0, 0, 0.03);
-    max-height: 100px;
-    overflow-y: auto;
-}
 
 .divination-context-items {
     display: flex;
@@ -322,10 +360,6 @@
     color: #f00;
 }
 
-.divination-context-container:empty {
-    display: none;
-}
-
 /* Empty state for context container */
 .divination-context-items:empty::after {
     content: "No context added";
@@ -344,14 +378,10 @@ li.directory-item .divination-page-button {
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.7);
     padding: 3px 6px;
-    border-radius: 3px;
-    color: #666;
-    opacity: 0;
+    opacity: 0.25;
     transition: all 0.2s ease;
     z-index: 50;
-    font-size: 12px;
 }
 
 li.directory-item:hover .divination-page-button {
@@ -361,5 +391,8 @@ li.directory-item:hover .divination-page-button {
 li.directory-item .divination-page-button:hover {
     opacity: 1;
     color: #000;
-    background: rgba(255, 255, 255, 0.9);
 } 
+
+div.chat-messages.message-list.chat-log p {
+  user-select: text;
+}

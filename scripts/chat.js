@@ -94,53 +94,10 @@ export class DivinationChat {
           </div>
         `);
         
-        // Add CSS for the context container
-        const style = $(`
-          <style>
-            .divination-context-container {
-              padding: 5px;
-              border-top: 1px solid #ddd;
-              border-bottom: 1px solid #ddd;
-              background-color: rgba(0, 0, 0, 0.03);
-              max-height: 100px;
-              overflow-y: auto;
-            }
-            .divination-context-items {
-              display: flex;
-              flex-wrap: wrap;
-              gap: 5px;
-              padding: 2px;
-            }
-            .divination-context-item {
-              display: flex;
-              align-items: center;
-              background-color: rgba(0, 0, 0, 0.05);
-              border: 1px solid #ccc;
-              border-radius: 3px;
-              padding: 2px 5px;
-              font-size: 0.8em;
-              white-space: nowrap;
-            }
-            .divination-context-item-icon {
-              margin-right: 3px;
-            }
-            .divination-context-item-remove {
-              margin-left: 5px;
-              cursor: pointer;
-              color: #999;
-            }
-            .divination-context-item-remove:hover {
-              color: #f00;
-            }
-            .divination-context-container:empty {
-              display: none;
-            }
-          </style>
-        `);
-        
+
         // Insert the context container before the input container
         inputContainer.before(contextContainer);
-        $(this.chatWindow.element).append(style);
+        $(this.chatWindow.element);
         
         // Update context items
         this._updateContextItems();
@@ -662,13 +619,23 @@ export class DivinationChat {
       const assistantName = game.settings.get('divination', 'assistantName');
       const assistantAvatar = game.settings.get('divination', 'assistantAvatar');
       
-      // Show thinking indicator
-      const thinkingMessage = this.chatWindow.addMessage({
-        content: `<p><i>Thinking...</i></p>`,
-        sender: assistantName,
-        cornerText: this._getTimestamp(),
-        img: assistantAvatar
-      });
+      // Prepare for thinking indicator
+      let thinkingMessage = null;
+      let thinkingTimeout = null;
+      
+      // Generate a random delay between 500-1000ms for thinking indicator
+      const thinkingDelay = Math.floor(Math.random() * 501) + 500;
+      
+      // Set up timeout for showing thinking indicator
+      thinkingTimeout = setTimeout(() => {
+        // Show thinking indicator after delay
+        thinkingMessage = this.chatWindow.addMessage({
+          content: `<p><i>Thinking...</i></p>`,
+          sender: assistantName,
+          cornerText: this._getTimestamp(),
+          img: assistantAvatar
+        });
+      }, thinkingDelay);
       
       // Generate response from API
       // Pass context items separately from history to keep them as reference material
@@ -678,7 +645,10 @@ export class DivinationChat {
         contextItems: this.contextItems 
       });
       
-      // Remove thinking indicator
+      // Clear timeout if response came back before thinking indicator was shown
+      clearTimeout(thinkingTimeout);
+      
+      // Remove thinking indicator if it was shown
       if (thinkingMessage) {
         thinkingMessage.remove();
       }
