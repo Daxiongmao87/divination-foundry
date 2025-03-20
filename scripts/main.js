@@ -82,6 +82,393 @@ Hooks.once('ready', async () => {
 });
 
 /**
+ * Adds Divination buttons to journal sheet headers
+ * One button for adding the entire journal as context
+ * One button for adding the current page as context
+ */
+Hooks.on('renderJournalSheet', (app, html, data) => {
+    if (!hasPermission(game.user)) return;
+    
+    const isConfigured = checkRequiredSettings();
+    if (!isConfigured) return;
+    
+    // Get the journal entry
+    const journal = app.document;
+    if (!journal) return;
+    
+    // Create button for adding entire journal as context
+    const journalButton = $(`
+        <a class="action-button divination-journal-all" data-tooltip="Add entire journal to Divination context">
+            <i class="fas fa-crystal-ball"></i>
+        </a>
+    `);
+    
+    // Add click event to journal button
+    journalButton.click(async ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        
+        // Open or focus the chat
+        const chat = DivinationChat.openChat();
+        if (!chat) return;
+        
+        // Extract content from all pages
+        const journalContext = {
+            type: 'journal',
+            id: journal.id,
+            name: journal.name,
+            content: await getJournalContent(journal, 'all')
+        };
+        
+        // Add context to the chat
+        chat.addContext(journalContext);
+    });
+    
+    // Find the header-search flexrow div
+    const headerSearchDiv = html.find('.header-search.flexrow');
+    
+    // Insert the journal button after the view-mode button
+    if (headerSearchDiv.length) {
+        // Find the view-mode button
+        const viewModeButton = headerSearchDiv.find('.action-button.view-mode');
+        if (viewModeButton.length) {
+            viewModeButton.after(journalButton);
+        } else {
+            // If view-mode button not found, just prepend to the header-search div
+            headerSearchDiv.prepend(journalButton);
+        }
+    }
+    
+    // Add button to individual page items in the sidebar using multiple methods
+    
+    // METHOD 1: Direct append to existing elements
+    const addPageButtonsToSidebar = () => {
+        // Find all page items in the sidebar
+        const pageItems = html.find('.directory-item');
+        
+        // Process each page item
+        pageItems.each((i, item) => {
+            const pageItem = $(item);
+            
+            // Get the page ID - try multiple methods
+            let pageId = pageItem.data('page-id');
+            
+            // If page ID not found via data attribute, try to find it via a different method
+            if (!pageId) {
+                // Try getting it from the data-document-id attribute (which some versions of Foundry might use)
+                pageId = pageItem.data('document-id') || pageItem.attr('data-page-id') || pageItem.attr('data-document-id');
+                
+                // If still no page ID, try to get it from a child element
+                if (!pageId) {
+                    // Sometimes the ID is on an inner element
+                    const idElement = pageItem.find('[data-page-id], [data-document-id]').first();
+                    if (idElement.length) {
+                        pageId = idElement.data('page-id') || idElement.data('document-id');
+                    }
+                }
+            }
+            
+            // Skip if already has a button or no page ID
+            if (!pageId || pageItem.find('.divination-page-button').length) return;
+            
+            // Create the page button
+            const pageButton = $(`
+                <a class="divination-page-button" data-tooltip="Add page to Divination context">
+                    <i class="fas fa-crystal-ball"></i>
+                </a>
+            `);
+            
+            // Add click handler
+            pageButton.click(async ev => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                
+                // Open or focus the chat
+                const chat = DivinationChat.openChat();
+                if (!chat) return;
+                
+                try {
+                    // Get the page
+                    const page = journal.pages.get(pageId);
+                    if (!page) {
+                        ui.notifications.warn(`Could not find the page with ID: ${pageId}`);
+                        return;
+                    }
+                    
+                    // Extract content from the page
+                    const pageContext = {
+                        type: 'page',
+                        id: page.id,
+                        name: page.name,
+                        journalName: journal.name,
+                        content: await getJournalContent(journal, pageId)
+                    };
+                    
+                    // Add context to the chat
+                    chat.addContext(pageContext);
+                    
+                    // Show success notification
+                } catch (error) {
+                    console.error("Divination | Error adding page context:", error);
+                    ui.notifications.error("Failed to add page to context. See console for details.");
+                }
+            });
+            
+            // Try to find the best place to append the button
+            const pageHeading = pageItem.find('.page-heading');
+            
+            if (pageHeading.length) {
+                // If we have a page heading, append to it
+                pageHeading.append(pageButton);
+            } else {
+                // Otherwise try to append to the directory item itself with absolute positioning
+                pageItem.css('position', 'relative');
+                pageItem.append(pageButton);
+                pageButton.css({
+                    'position': 'absolute',
+                    'right': '5px',
+                    'top': '50%',
+                    'transform': 'translateY(-50%)'
+                });
+            }
+            
+            // Add a debug attribute to help troubleshoot
+            pageButton.attr('data-page-id-ref', pageId);
+        });
+    };
+    
+    // METHOD 2: Add buttons via event delegation
+    // This adds the buttons with jQuery event delegation which handles dynamic content better
+    
+    // Create the container for our delegated approach
+    const directoryList = html.find('.directory-list');
+    if (directoryList.length) {
+        // Create a hidden template for the button that will be used
+        const buttonTemplate = $(`
+            <template id="divination-page-button-template">
+                <a class="divination-page-button" data-tooltip="Add page to Divination context">
+                    <i class="fas fa-crystal-ball"></i>
+                </a>
+            </template>
+        `);
+        html.append(buttonTemplate);
+        
+        // Add the delegate listener
+        directoryList.on('mouseenter', '.directory-item', function(event) {
+            const item = $(this);
+            
+            // Skip if already has a button
+            if (item.find('.divination-page-button').length) return;
+            
+            // Get page ID using various methods
+            let pageId = item.data('page-id') || item.data('document-id') || 
+                       item.attr('data-page-id') || item.attr('data-document-id');
+            
+            // If no ID found directly, check children
+            if (!pageId) {
+                const idElement = item.find('[data-page-id], [data-document-id]').first();
+                if (idElement.length) {
+                    pageId = idElement.data('page-id') || idElement.data('document-id');
+                }
+            }
+            
+            if (!pageId) return;
+            
+            // Clone the button from template
+            const template = document.getElementById('divination-page-button-template');
+            if (!template) return;
+            
+            const button = $(template.content.cloneNode(true).querySelector('.divination-page-button'));
+            
+            // Add the page ID reference
+            button.attr('data-page-id-ref', pageId);
+            
+            // Add to heading or item itself
+            const pageHeading = item.find('.page-heading');
+            if (pageHeading.length) {
+                pageHeading.append(button);
+            } else {
+                item.append(button);
+            }
+        });
+        
+        // Add the click handler using delegation
+        directoryList.on('click', '.divination-page-button', async function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const button = $(this);
+            const pageId = button.attr('data-page-id-ref');
+            
+            if (!pageId) {
+                ui.notifications.warn("No page ID found for this button.");
+                return;
+            }
+            
+            // Open or focus the chat
+            const chat = DivinationChat.openChat();
+            if (!chat) return;
+            
+            try {
+                // Get the page
+                const page = journal.pages.get(pageId);
+                if (!page) {
+                    ui.notifications.warn(`Could not find the page with ID: ${pageId}`);
+                    return;
+                }
+                
+                // Extract content from the page
+                const pageContext = {
+                    type: 'page',
+                    id: page.id,
+                    name: page.name,
+                    journalName: journal.name,
+                    content: await getJournalContent(journal, pageId)
+                };
+                
+                // Add context to the chat
+                chat.addContext(pageContext);
+                
+            } catch (error) {
+                console.error("Divination | Error adding page context:", error);
+                ui.notifications.error("Failed to add page to context. See console for details.");
+            }
+        });
+    }
+    
+    // Create a direct approach function for individual page items 
+    // that targets the exact structure from the user's example
+    const addButtonsToPages = () => {
+        // Specifically find directory items with the class structure the user provided
+        const pageItems = html.find('li.directory-item');
+        
+        pageItems.each((i, item) => {
+            const pageItem = $(item);
+            
+            // Skip if already has a button
+            if (pageItem.find('.divination-page-button').length) return;
+            
+            // Get page ID - specifically look at the data-page-id attribute described by the user
+            const pageId = pageItem.attr('data-page-id');
+            if (!pageId) return;
+            
+            // Create the button (simpler structure)
+            const pageButton = $(`
+                <a class="divination-page-button" data-tooltip="Add page to Divination">
+                    <i class="fas fa-crystal-ball"></i>
+                </a>
+            `);
+            
+            // Add click handler
+            pageButton.click(async function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Open or focus the chat
+                const chat = DivinationChat.openChat();
+                if (!chat) return;
+                
+                try {
+                    // Get the page
+                    const page = journal.pages.get(pageId);
+                    if (!page) {
+                        ui.notifications.warn(`Could not find the page with ID: ${pageId}`);
+                        return;
+                    }
+                    
+                    // Extract content from the page
+                    const pageContext = {
+                        type: 'page',
+                        id: page.id,
+                        name: page.name,
+                        journalName: journal.name,
+                        content: await getJournalContent(journal, pageId)
+                    };
+                    
+                    // Add context to the chat
+                    chat.addContext(pageContext);
+                    
+                } catch (error) {
+                    console.error("Divination | Error adding page context:", error);
+                    ui.notifications.error("Failed to add page to context. See console for details.");
+                }
+            });
+            
+            // Append directly to the list item as per user's example
+            pageItem.append(pageButton);
+        });
+    };
+    
+    // Try all approaches for maximum compatibility
+    addPageButtonsToSidebar();
+    // Try the direct DOM approach based on the user's HTML
+    addButtonsToPages();
+
+});
+
+/**
+ * Extract content from a journal or specific page
+ * @param {JournalEntry} journal - The journal entry
+ * @param {string} pageId - The page ID or 'all' for all pages
+ * @returns {string} - The extracted content
+ */
+async function getJournalContent(journal, pageId) {
+    try {
+        if (pageId === 'all') {
+            // Extract content from all pages
+            const allContent = [];
+            for (const page of journal.pages) {
+                const content = await extractPageContent(page);
+                if (content) {
+                    allContent.push(`## ${page.name}\n\n${content}`);
+                }
+            }
+            return allContent.join('\n\n');
+        } else {
+            // Extract content from specific page
+            const page = journal.pages.get(pageId);
+            if (!page) return '';
+            return await extractPageContent(page);
+        }
+    } catch (error) {
+        console.error("Divination | Error extracting journal content", error);
+        return '';
+    }
+}
+
+/**
+ * Extract content from a journal page
+ * @param {JournalEntryPage} page - The journal page
+ * @returns {string} - The extracted content
+ */
+async function extractPageContent(page) {
+    try {
+        if (page.text && page.text.content) {
+            // Handle text content
+            let content = page.text.content;
+            
+            // Remove HTML tags and convert to plain text
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            content = tempDiv.textContent || tempDiv.innerText || '';
+            
+            return content.trim();
+        } else if (page.type === 'image') {
+            // For image pages, just return the caption or a placeholder
+            return page.image?.caption || `[Image: ${page.name}]`;
+        } else if (page.type === 'pdf') {
+            // For PDF pages, just return a placeholder
+            return `[PDF Document: ${page.name}]`;
+        }
+        
+        return '';
+    } catch (error) {
+        console.error("Divination | Error extracting page content", error);
+        return '';
+    }
+}
+
+/**
  * Adds a Divination button to the chat controls
  */
 Hooks.on('renderChatLog', (app, html, data) => {
