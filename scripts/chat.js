@@ -82,26 +82,8 @@ export class DivinationChat {
    */
   _setupContextContainer() {
     setTimeout(() => {
-      // Find the chat input container
-      const inputContainer = $(this.chatWindow.element).find('.chat-input-container');
-      
-      // Create context container if it doesn't exist
-      if (inputContainer.length && !$(this.chatWindow.element).find('.divination-context-container').length) {
-        // Create the context container
-        const contextContainer = $(`
-          <div class="divination-context-container">
-            <div class="divination-context-items"></div>
-          </div>
-        `);
-        
-
-        // Insert the context container before the input container
-        inputContainer.before(contextContainer);
-        $(this.chatWindow.element);
-        
-        // Update context items
-        this._updateContextItems();
-      }
+      // Just update the context items - the container already exists in the template
+      this._updateContextItems();
     }, 100);
   }
   
@@ -154,7 +136,7 @@ export class DivinationChat {
    * @private
    */
   _updateContextItems() {
-    const contextItemsContainer = $(this.chatWindow.element).find('.divination-context-items');
+    const contextItemsContainer = $(this.chatWindow.element).find('.auxiliary-content-container .divination-context-items');
     if (!contextItemsContainer.length) return;
     
     // Clear existing items
@@ -162,12 +144,12 @@ export class DivinationChat {
     
     // If there are no items, hide the container
     if (this.contextItems.length === 0) {
-      $(this.chatWindow.element).find('.divination-context-container').hide();
+      $(this.chatWindow.element).find('.auxiliary-content-container').hide();
       return;
     }
     
     // Show the container
-    $(this.chatWindow.element).find('.divination-context-container').show();
+    $(this.chatWindow.element).find('.auxiliary-content-container').show();
     
     // Add each context item
     this.contextItems.forEach(item => {
@@ -582,21 +564,16 @@ export class DivinationChat {
   }
 
   /**
-   * Handler for user messages
+   * Handle a user message and generate a response
    * @param {string} message - The user's message
    * @private
    */
   async _handleUserMessage(message) {
-    // Don't process if already processing a message
-    if (this.processing) {
-      ui.notifications.warn("Please wait for the current message to be processed.");
-      return;
-    }
-    
     try {
+      if (this.processing) return;
       this.processing = true;
       
-      // Get user name and avatar
+      // Get user info
       const userName = game.user.name;
       const userAvatar = game.user.avatar || 'icons/svg/mystery-man.svg';
       
@@ -698,15 +675,6 @@ export class DivinationChat {
         cornerText: this._getTimestamp(),
         img: assistantAvatar
       });
-      
-      // Make sure to refresh the context container
-      this._setupContextContainer();
-      
-      // Update the context items display
-      this._updateContextItems();
-      
-      // Set up copy buttons for the new message
-      this._setupCopyButtons();
       
     } catch (error) {
       console.error("Divination | Error handling user message", error);

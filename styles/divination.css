@@ -74,44 +74,6 @@ a.divination-page-button:hover i.fas.fa-crystal-ball {
   transform: none;
 }
 
-.divination-context-container {
-  padding: 5px;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  background: url(/ui/parchment.jpg) repeat;
-  max-height: 100px;
-  overflow-y: hidden;
-}
-.divination-context-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  padding: 2px;
-}
-.divination-context-item {
-  display: flex;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.05);
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  padding: 2px 5px;
-  font-size: 0.8em;
-  white-space: nowrap;
-}
-.divination-context-item-icon {
-  margin-right: 3px;
-}
-.divination-context-item-remove {
-  margin-left: 5px;
-  cursor: pointer;
-  color: #999;
-}
-.divination-context-item-remove:hover {
-  color: #f00;
-}
-.divination-context-container:empty {
-  display: none;
-}
 /* Hidden Elements */
 .divination-chat-button {
   display: none;
@@ -336,6 +298,7 @@ a.divination-page-button:hover i.fas.fa-crystal-ball {
     border: 1px solid #ccc;
     border-radius: 3px;
     padding: 2px 5px;
+    margin-bottom: 8px;
     font-size: 0.8em;
     white-space: nowrap;
     transition: all 0.2s ease;
@@ -360,14 +323,6 @@ a.divination-page-button:hover i.fas.fa-crystal-ball {
     color: #f00;
 }
 
-/* Empty state for context container */
-.divination-context-items:empty::after {
-    content: "No context added";
-    font-style: italic;
-    color: #999;
-    padding: 2px 5px;
-}
-
 /* Add specific styles for the user's exact structure */
 li.directory-item {
     position: relative;
@@ -379,13 +334,13 @@ li.directory-item .divination-page-button {
     top: 50%;
     transform: translateY(-50%);
     padding: 3px 6px;
-    opacity: 0.25;
+    opacity: 0;
     transition: all 0.2s ease;
     z-index: 50;
 }
 
 li.directory-item:hover .divination-page-button {
-    opacity: 0.8;
+    opacity: 1;
 }
 
 li.directory-item .divination-page-button:hover {
