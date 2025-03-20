@@ -35,6 +35,9 @@ export class DivinationChat {
     this.history = this.options.history;
     this.id = this.options.id || randomID();
     this.processing = false;
+    
+    // Context items for the chat
+    this.contextItems = [];
 
     // Get the appropriate ChatModal class (the extended version if available)
     const ModalClass = getChatModalClass();
@@ -68,6 +71,182 @@ export class DivinationChat {
     
     // Add listener for reasoning toggle buttons
     this._setupReasoningListeners();
+    
+    // Set up the context items container
+    this._setupContextContainer();
+  }
+
+  /**
+   * Set up the context items container between conversation and input
+   * @private
+   */
+  _setupContextContainer() {
+    setTimeout(() => {
+      // Find the chat input container
+      const inputContainer = $(this.chatWindow.element).find('.chat-input-container');
+      
+      // Create context container if it doesn't exist
+      if (inputContainer.length && !$(this.chatWindow.element).find('.divination-context-container').length) {
+        // Create the context container
+        const contextContainer = $(`
+          <div class="divination-context-container">
+            <div class="divination-context-items"></div>
+          </div>
+        `);
+        
+        // Add CSS for the context container
+        const style = $(`
+          <style>
+            .divination-context-container {
+              padding: 5px;
+              border-top: 1px solid #ddd;
+              border-bottom: 1px solid #ddd;
+              background-color: rgba(0, 0, 0, 0.03);
+              max-height: 100px;
+              overflow-y: auto;
+            }
+            .divination-context-items {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 5px;
+              padding: 2px;
+            }
+            .divination-context-item {
+              display: flex;
+              align-items: center;
+              background-color: rgba(0, 0, 0, 0.05);
+              border: 1px solid #ccc;
+              border-radius: 3px;
+              padding: 2px 5px;
+              font-size: 0.8em;
+              white-space: nowrap;
+            }
+            .divination-context-item-icon {
+              margin-right: 3px;
+            }
+            .divination-context-item-remove {
+              margin-left: 5px;
+              cursor: pointer;
+              color: #999;
+            }
+            .divination-context-item-remove:hover {
+              color: #f00;
+            }
+            .divination-context-container:empty {
+              display: none;
+            }
+          </style>
+        `);
+        
+        // Insert the context container before the input container
+        inputContainer.before(contextContainer);
+        $(this.chatWindow.element).append(style);
+        
+        // Update context items
+        this._updateContextItems();
+      }
+    }, 100);
+  }
+  
+  /**
+   * Add a context item to the chat
+   * @param {Object} contextItem - The context item to add
+   * @param {string} contextItem.type - The type of context (journal, page, etc.)
+   * @param {string} contextItem.id - The unique ID of the item
+   * @param {string} contextItem.name - The name of the item
+   * @param {string} contextItem.content - The text content
+   */
+  addContext(contextItem) {
+    // Check if this context already exists (based on id and type)
+    const existingIndex = this.contextItems.findIndex(item => 
+      item.id === contextItem.id && item.type === contextItem.type
+    );
+    
+    if (existingIndex !== -1) {
+      // Replace existing context with updated one
+      this.contextItems[existingIndex] = contextItem;
+      ui.notifications.info(`Updated context: ${contextItem.name}`);
+    } else {
+      // Add new context
+      this.contextItems.push(contextItem);
+      ui.notifications.info(`Added context: ${contextItem.name}`);
+    }
+    
+    // Update the UI
+    this._updateContextItems();
+  }
+  
+  /**
+   * Remove a context item from the chat
+   * @param {string} id - The ID of the item to remove
+   * @param {string} type - The type of the item to remove
+   */
+  removeContext(id, type) {
+    const initialLength = this.contextItems.length;
+    this.contextItems = this.contextItems.filter(item => !(item.id === id && item.type === type));
+    
+    if (this.contextItems.length < initialLength) {
+      // Update the UI if an item was removed
+      this._updateContextItems();
+      ui.notifications.info("Removed context item");
+    }
+  }
+  
+  /**
+   * Update the context items in the UI
+   * @private
+   */
+  _updateContextItems() {
+    const contextItemsContainer = $(this.chatWindow.element).find('.divination-context-items');
+    if (!contextItemsContainer.length) return;
+    
+    // Clear existing items
+    contextItemsContainer.empty();
+    
+    // If there are no items, hide the container
+    if (this.contextItems.length === 0) {
+      $(this.chatWindow.element).find('.divination-context-container').hide();
+      return;
+    }
+    
+    // Show the container
+    $(this.chatWindow.element).find('.divination-context-container').show();
+    
+    // Add each context item
+    this.contextItems.forEach(item => {
+      let icon, label;
+      
+      // Determine icon and label based on type
+      if (item.type === 'journal') {
+        icon = 'fa-book';
+        label = `Journal: ${item.name}`;
+      } else if (item.type === 'page') {
+        icon = 'fa-scroll';
+        label = `Page: ${item.name} (${item.journalName})`;
+      } else {
+        icon = 'fa-file-alt';
+        label = item.name || 'Context';
+      }
+      
+      // Create the context item element
+      const contextItem = $(`
+        <div class="divination-context-item" data-id="${item.id}" data-type="${item.type}">
+          <i class="fas ${icon} divination-context-item-icon"></i>
+          <span class="divination-context-item-label">${label}</span>
+          <i class="fas fa-times divination-context-item-remove"></i>
+        </div>
+      `);
+      
+      // Add click handler for the remove button
+      contextItem.find('.divination-context-item-remove').click(ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        this.removeContext(item.id, item.type);
+      });
+      
+      // Add the item to the container
+      contextItemsContainer.append(contextItem);
+    });
   }
 
   /**
@@ -153,6 +332,9 @@ export class DivinationChat {
     
     // Re-setup copy buttons after re-render
     this._setupCopyButtons();
+    
+    // Re-setup context container after re-render
+    this._setupContextContainer();
   }
 
   /**
@@ -412,144 +594,118 @@ export class DivinationChat {
   }
 
   /**
-   * Handle a user message and send it to the AI
+   * Handler for user messages
    * @param {string} message - The user's message
    * @private
    */
   async _handleUserMessage(message) {
+    // Don't process if already processing a message
     if (this.processing) {
-      ui.notifications.warn("Please wait for the current response to complete.");
+      ui.notifications.warn("Please wait for the current message to be processed.");
       return;
     }
-
-    this.processing = true;
     
     try {
-      // Get the assistant name and avatar from settings
+      this.processing = true;
+      
+      // Get user name and avatar
+      const userName = game.user.name;
+      const userAvatar = game.user.avatar || 'icons/svg/mystery-man.svg';
+      
+      // Add user message to visual chat
+      this.chatWindow.addMessage({
+        content: `<p>${message}</p>`,
+        sender: userName,
+        cornerText: this._getTimestamp(),
+        isCurrentUser: true,
+        img: userAvatar
+      });
+      
+      // Add to conversation history
+      this.history.push({
+        role: 'user',
+        content: message
+      });
+      
+      // Add context to the API request if any
+      const enhancedHistory = [...this.history];
+      
+      // Add context items as system messages at the beginning of history
+      if (this.contextItems.length > 0) {
+        // Combine all context items into a single system message
+        let contextMessage = "Here is additional context information:\n\n";
+        
+        this.contextItems.forEach(item => {
+          if (item.type === 'journal') {
+            contextMessage += `## JOURNAL: ${item.name}\n\n${item.content}\n\n`;
+          } else if (item.type === 'page') {
+            contextMessage += `## PAGE: ${item.name} (from ${item.journalName})\n\n${item.content}\n\n`;
+          } else {
+            contextMessage += `## ${item.name || 'CONTEXT'}\n\n${item.content}\n\n`;
+          }
+        });
+        
+        // Insert the context as a system message at the beginning of history
+        enhancedHistory.unshift({
+          role: 'system',
+          content: contextMessage
+        });
+      }
+      
+      // Get assistant name
       const assistantName = game.settings.get('divination', 'assistantName');
       const assistantAvatar = game.settings.get('divination', 'assistantAvatar');
       
-      // Format user message with markdown parser
-      const formattedUserMessage = MarkdownParser.parse(message);
-      
-      // Initialize messages display sequence
-      
-      // Store existing messages
-      const existingMessages = [...ChatModal.data.messages];
-      
-      // Add user message to the array
-      const userMessage = {
-        _id: randomID(),
-        content: formattedUserMessage,
-        sender: game.user.name,
-        img: game.user.avatar || "icons/svg/mystery-man.svg",
-        cornerText: this._getTimestamp(),
-        isCurrentUser: true
-      };
-      existingMessages.push(userMessage);
-      
-      // Prepare thinking message (will be shown after delay)
-      const thinkingId = randomID();
-      const thinkingMessage = {
-        _id: thinkingId,
-        content: "<p><i>Thinking...</i></p>",
+      // Show thinking indicator
+      const thinkingMessage = this.chatWindow.addMessage({
+        content: `<p><i>Thinking...</i></p>`,
         sender: assistantName,
-        img: assistantAvatar,
         cornerText: this._getTimestamp(),
-        isCurrentUser: false
-      };
-      
-      // Render initial view with just the user's message
-      ChatModal.data.messages = existingMessages;
-      await this.chatWindow.render(true);
-      
-      // Generate a random delay between 500-1000ms for thinking indicator
-      const thinkingDelay = Math.floor(Math.random() * 501) + 500;
-      
-      // Track if thinking message has been displayed
-      let thinkingMessageShown = false;
-      
-      // Schedule thinking message to appear after random delay
-      const thinkingTimeout = setTimeout(() => {
-        thinkingMessageShown = true;
-        
-        // Display thinking message
-        existingMessages.push(thinkingMessage);
-        ChatModal.data.messages = existingMessages;
-        
-        // Update the chat display
-        this.chatWindow.render(true);
-        
-        // Ensure chat scrolls to bottom
-        setTimeout(() => {
-          const messageContainer = this.chatWindow.element.find('.chat-messages.message-list')[0];
-          if (messageContainer) {
-            messageContainer.scrollTop = messageContainer.scrollHeight;
-          }
-        }, 10);
-      }, thinkingDelay);
-      
-      // Initiate API call immediately (in parallel with thinking indicator)
-      const response = await sendMessage({
-        message: message,
-        history: this.history
+        img: assistantAvatar
       });
       
-      // Cancel thinking message display if API responded quickly
-      clearTimeout(thinkingTimeout);
+      // Generate response from API
+      const response = await sendMessage(enhancedHistory);
       
-      // Update conversation history
-      this.history = response.history;
-      
-      // Prepare final message display
-      let finalMessages;
-      
-      if (thinkingMessageShown) {
-        // Remove thinking message if it was shown
-        finalMessages = ChatModal.data.messages.filter(m => m._id !== thinkingId);
-      } else {
-        // Use existing messages if thinking wasn't shown
-        finalMessages = existingMessages;
+      // Remove thinking indicator
+      if (thinkingMessage) {
+        thinkingMessage.remove();
       }
       
-      // Add AI response message
-      const responseMessage = {
-        _id: randomID(),
-        content: MarkdownParser.parse(response.content),
-        sender: assistantName,
-        img: assistantAvatar,
-        cornerText: this._getTimestamp(),
-        isCurrentUser: false
-      };
-      finalMessages.push(responseMessage);
+      if (response.error) {
+        // Show error in chat
+        this.chatWindow.addMessage({
+          content: `<p class="divination-error">Error: ${response.error}</p>`,
+          sender: assistantName,
+          cornerText: this._getTimestamp(),
+          img: assistantAvatar
+        });
+        return;
+      }
       
-      // Update chat display with final messages
-      ChatModal.data.messages = finalMessages;
-      await this.chatWindow.render(true);
+      // Get bot response
+      const botMessage = response.response || "I'm sorry, I couldn't generate a response.";
       
-      // Set up reasoning toggle listeners after rendering
-      this._setupReasoningListeners();
-      
-      // Set up copy buttons for assistant messages
-      this._setupCopyButtons();
-    } catch (error) {
-      log({
-        message: "Error getting response",
-        error: error,
-        type: ["error"]
+      // Add to conversation history
+      this.history.push({
+        role: 'assistant',
+        content: botMessage
       });
       
-      ui.notifications.error("Failed to get a response. Check the console for details.");
-      
-      // Add error message - don't filter existing messages, just add the error
+      // Add formatted response to visual chat
       this.chatWindow.addMessage({
-        content: "<p>Sorry, I encountered an error while processing your request. Please try again.</p>",
-        sender: "System",
+        content: this._formatBotMessage(botMessage),
+        sender: assistantName,
         cornerText: this._getTimestamp(),
-        img: "icons/svg/hazard.svg"
+        img: assistantAvatar
       });
       
-      await this.chatWindow.render(true);
+      // Set up copy buttons for the new message
+      this._setupCopyButtons();
+      
+    } catch (error) {
+      console.error("Divination | Error handling user message", error);
+      ui.notifications.error("Error processing message. See console for details.");
     } finally {
       this.processing = false;
     }

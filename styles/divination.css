@@ -228,4 +228,138 @@
 
 .divination-copy-tooltip.visible {
   opacity: 1;
+}
+
+/* Divination Journal Buttons */
+.action-button.divination-journal-all {
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.action-button.divination-journal-all:hover {
+    color: #000;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Page Button in Sidebar */
+.divination-page-button {
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    opacity: 0.7;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    z-index: 100;
+    background-color: rgba(255, 255, 255, 0.6);
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.divination-page-button:hover {
+    color: #000;
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Override any potential display properties to ensure visibility */
+.directory-item .divination-page-button {
+    display: none !important;
+}
+
+.directory-item:hover .divination-page-button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Context Items Container */
+.divination-context-container {
+    padding: 5px;
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    background-color: rgba(0, 0, 0, 0.03);
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.divination-context-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 2px;
+}
+
+.divination-context-item {
+    display: flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.05);
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.divination-context-item:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.divination-context-item-icon {
+    margin-right: 3px;
+}
+
+.divination-context-item-remove {
+    margin-left: 5px;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.2s ease;
+}
+
+.divination-context-item-remove:hover {
+    color: #f00;
+}
+
+.divination-context-container:empty {
+    display: none;
+}
+
+/* Empty state for context container */
+.divination-context-items:empty::after {
+    content: "No context added";
+    font-style: italic;
+    color: #999;
+    padding: 2px 5px;
+}
+
+/* Add specific styles for the user's exact structure */
+li.directory-item {
+    position: relative;
+}
+
+li.directory-item .divination-page-button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.7);
+    padding: 3px 6px;
+    border-radius: 3px;
+    color: #666;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 50;
+    font-size: 12px;
+}
+
+li.directory-item:hover .divination-page-button {
+    opacity: 0.8;
+}
+
+li.directory-item .divination-page-button:hover {
+    opacity: 1;
+    color: #000;
+    background: rgba(255, 255, 255, 0.9);
 } 
