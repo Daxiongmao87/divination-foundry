@@ -17,6 +17,7 @@ Divination is a Foundry VTT module that connects your tabletop games to AI langu
 - 🧙 **AI Integration**: Connect to OpenAI, Anthropic, or run local AI models
 - 💬 **Chat Interface**: A dedicated window for interacting with AI assistants
 - 📋 **Copy Function**: One-click copying of AI responses to clipboard
+- 📚 **Journal Context**: Add journal entries and pages as context for more relevant AI responses
 
 ## Installation
 
@@ -53,6 +54,29 @@ After installation, configure the module with your AI service settings:
 2. Type your question in the chat interface
 3. Press Enter to receive an AI response
 4. Use the copy button to save important information
+
+### Adding Journal Context
+
+Divination allows you to add journal entries and pages as context for more informed AI responses:
+
+1. **Adding a Journal Entry**: 
+   - Open any journal entry
+   - Click the crystal ball icon in the journal header
+   - The entire journal content will be added as context to your Divination chat
+
+2. **Adding a Journal Page**:
+   - Open a journal entry with multiple pages
+   - Hover over a page in the sidebar
+   - Click the crystal ball icon that appears next to the page
+   - Only that specific page will be added as context
+
+3. **Using Context**:
+   - Added context appears between the chat history and input field
+   - You can add multiple journal entries and pages
+   - Each context item can be removed by clicking its X icon
+   - The AI will use this information when generating responses
+
+This feature is particularly useful for lore questions, NPC interactions, or rules clarifications based on your notes.
 
 ## API Configuration Examples
 
